@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: 当前文件",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "cwd": "${fileDirname}",
+      "justMyCode": true
+    },
+    {
+      "name": "Chat Agent: main.py",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/chat_agent/main.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/chat_agent",
+      "justMyCode": true
+    }
+  ]
+}

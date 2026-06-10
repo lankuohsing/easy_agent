@@ -1,0 +1,3 @@
+# Chat Agent 依赖
+openai>=1.30.0
+pyyaml>=6.0

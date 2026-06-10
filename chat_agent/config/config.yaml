@@ -1,0 +1,48 @@
+# =============================================================================
+# Chat Agent 主配置（非敏感，可提交 Git）
+# =============================================================================
+# 模型服务的 URL、API Key 等敏感信息请写入 secrets.yaml（见 secrets.example.yaml）
+# =============================================================================
+
+llm:
+  # 当前使用的模型服务（对应 providers 中的 key）
+  active: qwen
+
+  # 敏感凭证文件路径（相对 chat_agent 目录）
+  secrets_file: config/secrets.yaml
+
+  # 模型服务列表（可配置多个，通过 active 或命令行 --provider 切换）
+  providers:
+    qwen:
+      # 客户端类型，目前支持 openai_compatible（OpenAI 兼容 API）
+      type: openai_compatible
+      model: qwen-plus
+      temperature: 0.7
+      max_tokens: 2048
+      timeout: 60
+      # 是否需要 api_key；云端服务一般为 true，本地 Ollama 等可设为 false
+      auth_required: true
+
+    local-ollama:
+      type: openai_compatible
+      model: llama3
+      temperature: 0.7
+      max_tokens: 2048
+      timeout: 120
+      auth_required: false
+
+    deepseek:
+      type: openai_compatible
+      model: deepseek-chat
+      temperature: 0.7
+      max_tokens: 2048
+      timeout: 60
+      auth_required: true
+
+agent:
+  system_prompt_file: prompts/system_prompt.txt
+  show_system_prompt_on_start: false
+
+runtime:
+  use_mock: false
+  mock_delay: 0.3

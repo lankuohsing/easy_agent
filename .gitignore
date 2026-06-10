@@ -6,6 +6,8 @@ __pycache__/
 # C extensions
 *.so
 
+.DS_Store
+
 # Distribution / packaging
 .Python
 build/
@@ -216,3 +218,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# 敏感凭证（URL / API Key 等，切勿提交；secrets.example.yaml 可提交）
+**/secrets.yaml
+
+**/outputs/
