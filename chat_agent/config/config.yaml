@@ -48,6 +48,9 @@ llm:
 agent:
   system_prompt_file: prompts/system_prompt.txt
   show_system_prompt_on_start: false
+  memory:
+    enabled: true
+    storage_dir: memories
 
 runtime:
   use_mock: false

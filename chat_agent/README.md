@@ -2,7 +2,7 @@
 
 一个**最小可运行**的多轮对话 Agent 示例项目，适合有大模型基础的算法工程师快速上手 Agent 开发。
 
-功能聚焦：终端多轮对话、对话记忆、可自定义 System Prompt、**多模型服务配置**、Mock 调试模式。
+功能聚焦：终端多轮对话、对话记忆（文本文件持久化）、可自定义 System Prompt、**多模型服务配置**、Mock 调试模式。
 
 ---
 
@@ -20,12 +20,15 @@ chat_agent/
 │   └── secrets.yaml             # 真实 URL / API Key（已被 gitignore）
 ├── prompts/
 │   └── system_prompt.txt
+├── memories/                    # 会话记忆文本存档（gitignore，运行时生成）
 └── chat_agent/
-    ├── config_loader.py         # 配置合并与加载
+    ├── config_loader.py
     ├── conversation.py
+    ├── memory_store.py          # 记忆文件持久化
+    ├── response_parser.py       # 分离 thinking / answer
     ├── agent.py
     ├── cli.py
-    └── llm/client.py            # OpenAI SDK / requests 直连 / Mock
+    └── llm/client.py
 ```
 
 ### 配置分层
@@ -131,6 +134,25 @@ python main.py --mock
 ### 4. 自定义 System Prompt
 
 编辑 `prompts/system_prompt.txt`，或在 `config.yaml` 的 `agent.system_prompt` 内联填写。
+
+### 5. 会话记忆持久化
+
+启动后会在 `memories/` 下创建文本文件，文件名格式 `YYYYMMDD_HHMMSS.txt`。每轮对话后自动更新，保存：
+
+- System Prompt
+- `[User]`、`[Assistant/Thinking]`（如有）、`[Assistant/Answer]`
+- `[Assistant/Raw]` 原始输出备份
+
+拼接 LLM 上下文与终端展示时**仅使用 Answer**，不含思考过程。
+
+```yaml
+agent:
+  memory:
+    enabled: true
+    storage_dir: memories
+```
+
+`/new` 会创建新的记忆文件。启动 banner 会显示当前记忆文件路径。
 
 ---
 

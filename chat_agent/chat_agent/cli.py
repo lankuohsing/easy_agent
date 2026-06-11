@@ -37,9 +37,10 @@ HELP_TEXT = """
 
 class ChatCLI:
     """终端对话界面。"""
-
+    # 可以把它理解成 REPL（Read-Eval-Print Loop）：读取用户输入，执行命令，打印结果。
     def __init__(self, agent: ChatAgent) -> None:
         self.agent = agent
+        # 一个字典，键是命令名字符串，值是「接收 list[str]、返回 CommandResult 的函数」。
         self._commands: dict[str, Callable[[list[str]], CommandResult]] = {
             "help": self._cmd_help,
             "?": self._cmd_help,
@@ -99,6 +100,8 @@ class ChatCLI:
         print(f"  {mode}")
         print("  输入 /help 查看命令，/exit 退出")
         print("=" * 56)
+        if self.agent.memory_file_path:
+            print(f"  记忆文件: {self.agent.memory_file_path}")
         if self.agent.config.agent.show_system_prompt_on_start:
             print("\n[System Prompt]\n")
             print(self.agent.memory.system_prompt)
@@ -128,11 +131,11 @@ class ChatCLI:
         return CommandResult(handled=True, should_exit=True)
 
     def _cmd_new(self, _args: list[str]) -> CommandResult:
-        self.agent.new_conversation()
-        return CommandResult(
-            handled=True,
-            message="已开启新对话，历史已清空（system prompt 保持不变）。",
-        )
+        memory_path = self.agent.new_conversation()
+        msg = "已开启新对话，历史已清空（system prompt 保持不变）。"
+        if memory_path:
+            msg += f"\n新记忆文件: {memory_path}"
+        return CommandResult(handled=True, message=msg)
 
     def _cmd_history(self, _args: list[str]) -> CommandResult:
         summary = self.agent.memory.format_history_summary()

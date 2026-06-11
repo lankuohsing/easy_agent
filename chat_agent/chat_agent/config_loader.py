@@ -87,12 +87,21 @@ class LLMConfig:
 
 
 @dataclass
+class MemoryConfig:
+    """会话记忆持久化配置。"""
+
+    enabled: bool = True
+    storage_dir: str = "memories"
+
+
+@dataclass
 class AgentConfig:
     """Agent 行为参数。"""
 
     system_prompt_file: str = "prompts/system_prompt.txt"
     system_prompt: str | None = None
     show_system_prompt_on_start: bool = False
+    memory: MemoryConfig = field(default_factory=MemoryConfig)
 
 
 @dataclass
@@ -199,6 +208,15 @@ def _parse_provider(
     )
 
 
+def _parse_memory_config(raw: Any) -> MemoryConfig:
+    if not isinstance(raw, dict):
+        return MemoryConfig()
+    return MemoryConfig(
+        enabled=bool(raw.get("enabled", True)),
+        storage_dir=str(raw.get("storage_dir", MemoryConfig.storage_dir)),
+    )
+
+
 def load_config(
     config_path: Path | None = None,
     secrets_path: Path | None = None,
@@ -263,6 +281,7 @@ def load_config(
             show_system_prompt_on_start=bool(
                 agent_raw.get("show_system_prompt_on_start", False)
             ),
+            memory=_parse_memory_config(agent_raw.get("memory", {})),
         ),
         runtime=RuntimeConfig(
             use_mock=bool(runtime_raw.get("use_mock", False)),
