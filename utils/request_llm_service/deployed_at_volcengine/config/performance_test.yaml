@@ -1,0 +1,14 @@
+# =============================================================================
+# 压测脚本配置
+# =============================================================================
+# system_prompt 单独存放在 prompts/system_prompt.txt，便于编辑与版本管理。
+# 路径均相对于 deployed_at_volcengine/ 目录。
+# =============================================================================
+
+system_prompt_file: prompts/system_prompt.txt
+
+test:
+  duration_s: 300
+  concurrency: 4
+  csv: inputs/news_1000.csv
+  model: qwen3_6_35B_A3B
