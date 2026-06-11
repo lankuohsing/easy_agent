@@ -25,7 +25,7 @@ chat_agent/
     ├── conversation.py
     ├── agent.py
     ├── cli.py
-    └── llm/client.py            # OpenAI 兼容客户端 + Mock
+    └── llm/client.py            # OpenAI SDK / requests 直连 / Mock
 ```
 
 ### 配置分层
@@ -33,7 +33,7 @@ chat_agent/
 | 文件 | 内容 | 是否提交 Git |
 |------|------|--------------|
 | `config.yaml` | 模型参数、`active` 服务、Agent 行为、多 provider 定义 | ✅ 可提交 |
-| `secrets.yaml` | 各 provider 的 `base_url`、`api_key` | ❌ gitignore |
+| `secrets.yaml` | 各 provider 的 `api_url`/`base_url`、`api_key` | ❌ gitignore |
 
 ---
 
@@ -70,6 +70,19 @@ llm:
       type: openai_compatible
       model: llama3
       auth_required: false   # 本地 Ollama 等无需 key
+
+    qwen-volc:
+      type: http_chat_completions   # requests 直 POST 完整 endpoint
+      model: qwen3_6_35B_A3B
+      temperature: 0.0
+      max_tokens: 4096
+      timeout: 300
+      connect_timeout: 10
+      auth_required: false
+      enable_thinking: true
+      generate_cfg:
+        top_p: 0.8
+        top_k: 1
 ```
 
 **敏感凭证** 单独存放：
@@ -82,7 +95,13 @@ cp config/secrets.example.yaml config/secrets.yaml
 
 ```yaml
 providers:
+  qwen-volc:
+    # http_chat_completions：填完整 endpoint
+    api_url: "https://your-gateway.volceapi.com/v1/chat/completions"
+    api_key: ""
+
   qwen:
+    # openai_compatible：填 API 前缀（不含 /chat/completions）
     base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
     api_key: "sk-你的真实密钥"
 
@@ -120,7 +139,9 @@ python main.py --mock
 - 在 `config.yaml` 的 `llm.providers` 下定义多个服务，每个服务有唯一 key（如 `qwen`、`deepseek`）。
 - 同一 key 在 `secrets.yaml` 的 `providers` 下填写对应的 `base_url` 和（可选）`api_key`。
 - `auth_required: false` 表示该服务不需要 token，仅需 `base_url`（适用于本地 Ollama、内网网关等）。
-- 客户端类型 `openai_compatible` 适用于 Qwen（DashScope）、DeepSeek、Ollama、vLLM 等 OpenAI 格式 API。
+- 客户端类型：
+  - `openai_compatible`：openai SDK，`base_url` 为 API 前缀（`.../v1`）
+  - `http_chat_completions`：requests 直 POST，`api_url` 为完整 endpoint（`.../v1/chat/completions`），支持 `generate_cfg`、`enable_thinking` 等扩展参数
 - 切换服务：修改 `llm.active`，或使用 `python main.py --provider <name>`。
 
 ### 新增一个模型服务

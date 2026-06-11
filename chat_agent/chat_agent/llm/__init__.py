@@ -6,6 +6,7 @@ from chat_agent.llm.client import (
     MockLLMClient,
     OpenAICompatibleClient,
     QwenClient,
+    RequestsChatCompletionsClient,
     create_llm_client,
 )
 
@@ -15,5 +16,6 @@ __all__ = [
     "MockLLMClient",
     "OpenAICompatibleClient",
     "QwenClient",
+    "RequestsChatCompletionsClient",
     "create_llm_client",
 ]

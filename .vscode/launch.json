@@ -8,7 +8,7 @@
       "program": "${file}",
       "console": "integratedTerminal",
       "cwd": "${fileDirname}",
-      "justMyCode": true
+      "justMyCode": false
     },
     {
       "name": "Chat Agent: main.py",

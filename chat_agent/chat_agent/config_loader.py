@@ -33,12 +33,18 @@ class ModelProviderConfig:
 
     Attributes:
         name: provider 标识，与 config.yaml / secrets.yaml 中的 key 对应
-        type: 客户端类型，如 openai_compatible
+        type: 客户端类型：openai_compatible | http_chat_completions
         model: 模型名称
-        base_url: API 地址（来自 secrets.yaml）
-        api_key: API Key（来自 secrets.yaml，无鉴权服务可为 None）
+        base_url: openai_compatible 时为 API 前缀（如 .../v1）；
+                  http_chat_completions 时为完整 endpoint（如 .../v1/chat/completions）
+        api_key: API Key（无鉴权服务可为 None）
         auth_required: 是否必须提供 api_key
         temperature, max_tokens, timeout: 推理参数
+        connect_timeout: http 请求连接超时（秒）
+        generate_cfg: 额外合并进请求体的参数（top_p、top_k 等）
+        enable_thinking: Qwen thinking 开关；None 表示不写入 chat_template_kwargs
+        stop_token: 停止词
+        stream: 是否流式（Agent CLI 默认 false）
     """
 
     name: str
@@ -50,6 +56,11 @@ class ModelProviderConfig:
     temperature: float = 0.7
     max_tokens: int = 2048
     timeout: int = 60
+    connect_timeout: int = 10
+    generate_cfg: dict[str, Any] = field(default_factory=dict)
+    enable_thinking: bool | None = None
+    stop_token: str | None = None
+    stream: bool = False
 
 
 @dataclass
@@ -141,16 +152,17 @@ def _parse_provider(
         creds = {}
 
     auth_required = bool(provider_raw.get("auth_required", True))
-    base_url = str(creds.get("base_url", "")).strip()
+    # api_url 与 base_url 均支持；http_chat_completions 类型应填完整 endpoint
+    api_url = str(creds.get("api_url") or creds.get("base_url", "")).strip()
     api_key_raw = creds.get("api_key")
     api_key = str(api_key_raw).strip() if api_key_raw is not None else None
     if api_key == "":
         api_key = None
 
-    if not base_url and strict:
+    if not api_url and strict:
         raise ValueError(
-            f"模型服务 '{name}' 缺少 base_url。"
-            f"请在 secrets.yaml 的 providers.{name}.base_url 中配置。"
+            f"模型服务 '{name}' 缺少 API 地址。"
+            f"请在 secrets.yaml 的 providers.{name}.api_url（或 base_url）中配置。"
         )
 
     if auth_required and strict:
@@ -161,16 +173,29 @@ def _parse_provider(
                 f"或将 config.yaml 中 providers.{name}.auth_required 设为 false。"
             )
 
+    generate_cfg = provider_raw.get("generate_cfg") or {}
+    if not isinstance(generate_cfg, dict):
+        generate_cfg = {}
+
+    enable_thinking = provider_raw.get("enable_thinking")
+    if enable_thinking is not None:
+        enable_thinking = bool(enable_thinking)
+
     return ModelProviderConfig(
         name=name,
         type=str(provider_raw.get("type", "openai_compatible")),
         model=str(provider_raw.get("model", "")),
-        base_url=base_url,
+        base_url=api_url,
         api_key=api_key,
         auth_required=auth_required,
         temperature=float(provider_raw.get("temperature", 0.7)),
         max_tokens=int(provider_raw.get("max_tokens", 2048)),
         timeout=int(provider_raw.get("timeout", 60)),
+        connect_timeout=int(provider_raw.get("connect_timeout", 10)),
+        generate_cfg=generate_cfg,
+        enable_thinking=enable_thinking,
+        stop_token=provider_raw.get("stop_token"),
+        stream=bool(provider_raw.get("stream", False)),
     )
 
 
@@ -207,7 +232,7 @@ def load_config(
     if not providers_raw:
         raise ValueError("config.yaml 中 llm.providers 为空，请至少定义一个模型服务。")
 
-    providers: dict[str, ModelProviderConfig] = {}
+    providers: dict[str, ModelProviderConfig] = {} # 有效的模型服务信息
     merge_errors: list[str] = []
 
     for name, provider_def in providers_raw.items():
