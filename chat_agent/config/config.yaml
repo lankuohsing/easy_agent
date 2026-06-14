@@ -29,21 +29,6 @@ llm:
         max_input_tokens: 32768
         separate_reasoning: false
 
-    local-ollama:
-      type: openai_compatible
-      model: llama3
-      temperature: 0.7
-      max_tokens: 2048
-      timeout: 120
-      auth_required: false
-
-    deepseek:
-      type: openai_compatible
-      model: deepseek-chat
-      temperature: 0.7
-      max_tokens: 2048
-      timeout: 60
-      auth_required: true
 
 agent:
   system_prompt_file: prompts/system_prompt.txt

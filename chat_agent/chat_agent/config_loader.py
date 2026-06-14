@@ -67,7 +67,7 @@ class ModelProviderConfig:
 class LLMConfig:
     """大模型相关配置。"""
 
-    active: str = "qwen"
+    active: str = "qwen-volc"
     secrets_file: str = "config/secrets.yaml"
     providers: dict[str, ModelProviderConfig] = field(default_factory=dict)
 

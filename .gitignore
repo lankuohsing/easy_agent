@@ -3,6 +3,8 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+.idea/
+
 # C extensions
 *.so
 
@@ -224,3 +226,6 @@ __marimo__/
 
 **/outputs/
 **/inputs/
+
+# Chat Agent 本地会话记忆（文本存档，不提交）
+chat_agent/memories/
